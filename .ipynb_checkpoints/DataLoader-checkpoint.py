@@ -59,7 +59,7 @@ class DataLoader:
         mask = self.dict_df['raw'].isna().any(axis=1)
     
         # Generate the median estimates
-        self.estimates = self.dict_df['raw'].groupby('Class')[['key', 'instrumentalness']].median()
+        self.estimates = self.dict_df['raw'].groupby('Class')[['key', 'instrumentalness', 'Popularity']].median()
 
         # Create a copy to work on
         self.dict_df['imputed'] = self.dict_df['raw'].copy()
@@ -70,7 +70,7 @@ class DataLoader:
     def is_NaN(self, x):
         return x != x;
         
-    def impute_Rows(self, X, cols_to_Impute = ['key', 'instrumentalness']):
+    def impute_Rows(self, X, cols_to_Impute = ['key', 'instrumentalness', 'Popularity']):
         for col in cols_to_Impute:
             if self.is_NaN(X[col]):
                 X[col] = self.estimates.loc[X['Class'], col]
