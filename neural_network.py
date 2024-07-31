@@ -8,7 +8,8 @@ class NeuralNetwork(nn.Module):
                  input_size,
                  num_classes,
                  list_hidden,
-                 activation='sigmoid'):
+                 activation='sigmoid',
+                 init_method='none'):
         """Class constructor for NeuralNetwork
 
         Arguments:
@@ -18,6 +19,8 @@ class NeuralNetwork(nn.Module):
             units per hidden layer in the network
             activation {str, optional} -- Type of activation function. Choices
             include 'sigmoid', 'tanh', and 'relu'.
+            init_method {str, optional} -- Type of weight initialization method. Choices
+            include 'none', 'kaiming', and 'xavier'.
         """
         super(NeuralNetwork, self).__init__()
 
@@ -25,6 +28,10 @@ class NeuralNetwork(nn.Module):
         self.num_classes = num_classes
         self.list_hidden = list_hidden
         self.activation = activation
+        self.init_method = init_method
+
+        self.create_network()
+        #self.init_weights()
 
     def create_network(self):
         """Creates the layers of the neural network.
@@ -38,7 +45,6 @@ class NeuralNetwork(nn.Module):
         
         # Append the activation layer by calling
         # the self.get_activation() function.
-        #layers.append(None)
         layers.append(self.get_activation())
         
         # Iterate over other hidden layers just before the last layer
@@ -49,7 +55,7 @@ class NeuralNetwork(nn.Module):
             layers.append(nn.Linear(in_features=self.list_hidden[i], out_features=self.list_hidden[i+1]))
             
             # Append the activation layer by
-            # calling the self.get_activation() function.
+            # calling the self.get_activation(self.activation) function.
             layers.append(self.get_activation(self.activation))
 
         # Append a torch.nn.Linear layer to the
@@ -61,28 +67,20 @@ class NeuralNetwork(nn.Module):
         self.layers = nn.Sequential(*layers)
 
     def init_weights(self):
-        """Initializes the weights of the network. Weights of a
-        torch.nn.Linear layer should be initialized from a normal
-        distribution with mean 0 and standard deviation 0.1. Bias terms of a
-        torch.nn.Linear layer should be initialized with a constant value of 0.
+        """Initializes the weights of the network.
         """
         torch.manual_seed(2)
 
         # For each layer in the network
         for module in self.modules():
-
-            # If it is a torch.nn.Linear layer
             if isinstance(module, nn.Linear):
-
-                # Initialize the weights of the torch.nn.Linear layer
-                # from a normal distribution with mean 0 and standard deviation
-                # of 0.1.
-                nn.init.normal_(module.weight, mean=0.0, std=0.1)
-
-                # Initialize the bias terms of the torch.nn.Linear layer
-                # with a constant value of 0.
+                if self.init_method == 'kaiming':
+                    nn.init.kaiming_normal_(module.weight, nonlinearity='relu')
+                elif self.init_method == 'xavier':
+                    nn.init.xavier_normal_(module.weight)
+                else:  # default is none
+                    nn.init.normal_(module.weight, mean=0.0, std=0.01)
                 nn.init.constant_(module.bias, 0.0)
-
 
     def get_activation(self,
                        mode='sigmoid'):
@@ -102,7 +100,9 @@ class NeuralNetwork(nn.Module):
 
         elif mode == 'relu':
             activation = nn.ReLU(inplace=True)
-
+        elif mode == 'elu':
+            activation = nn.ELU(inplace=True)
+        
         return activation
 
     def forward(self,
