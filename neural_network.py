@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch.nn.init
-
+import torch.nn.functional as F
 
 class NeuralNetwork(nn.Module):
 
@@ -31,14 +31,12 @@ class NeuralNetwork(nn.Module):
         """
         layers = []
 
-        # TODO: Revise the code below. Append a torch.nn.Linear layer to the
+        # Append a torch.nn.Linear layer to the
         # layers list with correct values for parameters in_features and
         # out_features. This is the first layer of the network.
-        # HINT: You will use self.list_hidden here.
-        # layers.append(None)
         layers.append(nn.Linear(in_features=self.input_size, out_features=self.list_hidden[0]))
         
-        # TODO: Revise the code below. Append the activation layer by calling
+        # Append the activation layer by calling
         # the self.get_activation() function.
         #layers.append(None)
         layers.append(self.get_activation())
@@ -46,20 +44,17 @@ class NeuralNetwork(nn.Module):
         # Iterate over other hidden layers just before the last layer
         for i in range(len(self.list_hidden) - 1):
 
-            # TODO: Revise the code below. Append a torch.nn.Linear layer to
+            # Append a torch.nn.Linear layer to
             # the layers list according to the values in self.list_hidden.
-            # layers.append(None)
             layers.append(nn.Linear(in_features=self.list_hidden[i], out_features=self.list_hidden[i+1]))
-            # TODO: Revise the code below. Append the activation layer by
+            
+            # Append the activation layer by
             # calling the self.get_activation() function.
-            # layers.append(None)
             layers.append(self.get_activation(self.activation))
 
-        # TODO: Revise the code below. Append a torch.nn.Linear layer to the
+        # Append a torch.nn.Linear layer to the
         # layers list with correct values for parameters in_features and
         # out_features. This is the last layer of the network.
-        # HINT: You will use self.list_hidden here.
-        #layers.append(None)
         layers.append(nn.Linear(in_features=self.list_hidden[-1], out_features=self.num_classes))
         
         layers.append(nn.Softmax(dim=1))
@@ -79,18 +74,15 @@ class NeuralNetwork(nn.Module):
             # If it is a torch.nn.Linear layer
             if isinstance(module, nn.Linear):
 
-                # TODO: Initialize the weights of the torch.nn.Linear layer
+                # Initialize the weights of the torch.nn.Linear layer
                 # from a normal distribution with mean 0 and standard deviation
                 # of 0.1.
-                # HINT: Use nn.init.normal_() function.
                 nn.init.normal_(module.weight, mean=0.0, std=0.1)
-                # pass
 
-                # TODO: Initialize the bias terms of the torch.nn.Linear layer
+                # Initialize the bias terms of the torch.nn.Linear layer
                 # with a constant value of 0.
-                # HINT: Use nn.init.constant_() function.
                 nn.init.constant_(module.bias, 0.0)
-                # pass
+
 
     def get_activation(self,
                        mode='sigmoid'):
@@ -113,59 +105,7 @@ class NeuralNetwork(nn.Module):
 
         return activation
 
-    def forward_manual(self,
-                       x,
-                       verbose=False):
-        """Forward propagation of the model, implemented manually.
-
-        Arguments:
-            x {torch.Tensor} -- A Tensor of shape (N, D) representing input
-            features to the model.
-            verbose {bool, optional} -- Indicates if the function prints the
-            output or not.
-
-        Returns:
-            torch.Tensor, torch.Tensor -- A Tensor of shape (N, C) representing
-            the output of the final linear layer in the network. A Tensor of
-            shape (N, C) representing the probabilities of each class given by
-            the softmax function.
-        """
-
-        # For each layer in the network
-        for i in range(len(self.layers) - 1):
-
-            # If it is a torch.nn.Linear layer
-            if isinstance(self.layers[i], nn.Linear):
-
-                # TODO: Compute the result of the linear layer. Do not forget
-                # to add the bias term. Assign the result to x.
-                # HINT: Use torch.matmul() function.
-                x = torch.matmul(x, self.layers[i].weight.t()) + self.layers[i].bias
-                # pass
-
-            # If it is another function
-            else:
-                # Call the forward() function of the layer
-                # and return the result to x.
-                x = self.layers[i](x)
-
-            if verbose:
-                # Print the output of the layer
-                print('Output of layer ' + str(i))
-                print(x, '\n')
-
-        # Apply the softmax function
-        probabilities = self.layers[-1](x)
-
-        if verbose:
-            print('Output of layer ' + str(len(self.layers) - 1))
-            print(probabilities, '\n')
-
-        return x, probabilities
-
-    def forward(self,
-                x,
-                verbose=False):
+    def forward(self, x, verbose=False):
         """Forward propagation of the model, implemented using PyTorch.
 
         Arguments:
@@ -180,10 +120,8 @@ class NeuralNetwork(nn.Module):
             shape (N, C) representing the probabilities of each class given by
             the softmax function.
         """
-
         # For each layer in the network
         for i in range(len(self.layers) - 1):
-
             # Call the forward() function of the layer
             # and return the result to x.
             x = self.layers[i](x)
@@ -193,8 +131,9 @@ class NeuralNetwork(nn.Module):
                 print('Output of layer ' + str(i))
                 print(x, '\n')
 
-        # Apply the softmax function
-        probabilities = self.layers[-1](x)
+        # The final layer
+        x = self.layers[-1](x)
+        probabilities = F.softmax(x, dim=1)  # Apply softmax to logits
 
         if verbose:
             print('Output of layer ' + str(len(self.layers) - 1))
@@ -215,7 +154,6 @@ class NeuralNetwork(nn.Module):
             the class with the highest probability for N instances.
         """
 
-        # TODO: Return the index of the class with the highest probability
-        # pass
+        # Return the index of the class with the highest probability
         _,output = torch.max(probabilities, dim=1)
         return output
