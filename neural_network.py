@@ -105,7 +105,9 @@ class NeuralNetwork(nn.Module):
 
         return activation
 
-    def forward(self, x, verbose=False):
+    def forward(self,
+                x,
+                verbose=False):
         """Forward propagation of the model, implemented using PyTorch.
 
         Arguments:
@@ -120,8 +122,10 @@ class NeuralNetwork(nn.Module):
             shape (N, C) representing the probabilities of each class given by
             the softmax function.
         """
+
         # For each layer in the network
         for i in range(len(self.layers) - 1):
+
             # Call the forward() function of the layer
             # and return the result to x.
             x = self.layers[i](x)
@@ -131,9 +135,8 @@ class NeuralNetwork(nn.Module):
                 print('Output of layer ' + str(i))
                 print(x, '\n')
 
-        # The final layer
-        x = self.layers[-1](x)
-        probabilities = F.softmax(x, dim=1)  # Apply softmax to logits
+        # Apply the softmax function
+        probabilities = self.layers[-1](x)
 
         if verbose:
             print('Output of layer ' + str(len(self.layers) - 1))
